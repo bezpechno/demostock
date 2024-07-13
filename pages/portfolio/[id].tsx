@@ -18,24 +18,30 @@ const PortfolioPage: React.FC = () => {
   const router = useRouter();
   const { id } = router.query;
   const [portfolio, setPortfolio] = useState<Portfolio | null>(null);
-  const [chartData, setChartData] = useState<{ date: string; price: number }[]>([]);
+  const [chartData, setChartData] = useState<
+    { date: string; open: number; high: number; low: number; close: number; volume: number }[]
+  >([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     if (id) {
-      axios.get(`/api/portfolio?id=${id}`).then((response) => {
-        setPortfolio(response.data);
-        setLoading(false);
-      }).catch(error => {
-        console.error('Error fetching portfolio:', error);
-        setLoading(false);
-      });
+      axios
+        .get(`/api/portfolio?id=${id}`)
+        .then((response) => {
+          setPortfolio(response.data);
+          setLoading(false);
+        })
+        .catch((error) => {
+          console.error('Error fetching portfolio:', error);
+          setLoading(false);
+        });
     }
   }, [id]);
 
   useEffect(() => {
     if (portfolio) {
-      axios.get(`/api/stock-price`, { params: { symbol: portfolio.name } })
+      axios
+        .get(`/api/stock-price`, { params: { symbol: portfolio.name } })
         .then((response) => {
           setChartData(response.data);
         })

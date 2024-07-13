@@ -1,5 +1,3 @@
-// pages/api/stock-price.ts
-
 import type { NextApiRequest, NextApiResponse } from 'next';
 import yahooFinance from 'yahoo-finance2';
 
@@ -11,7 +9,12 @@ export default async (req: NextApiRequest, res: NextApiResponse) => {
   }
 
   try {
-    const result = await yahooFinance.historical(symbol as string, { period1: '2022-01-01', interval: '1d' });
+    const result = await yahooFinance.historical(symbol as string, {
+      period1: '2022-01-01',
+      period2: new Date().toISOString().split('T')[0],
+      interval: '1d',
+    });
+
     const data = result.map((item) => ({
       date: item.date.toISOString().split('T')[0],
       open: item.open,

@@ -1,3 +1,4 @@
+// components/Dashboard/TickerTape.tsx
 import React, { useEffect, useState } from 'react';
 import axios from 'axios';
 
@@ -29,8 +30,8 @@ const TickerTape: React.FC = () => {
   }
 
   return (
-    <div className="ticker-tape">
-      <div className="ticker-tape-content">
+    <div className="ticker-tape-container">
+      <div className="ticker-tape">
         {tickers.map((ticker) => (
           <span key={ticker.symbol} className="ticker-item">
             {ticker.symbol}: ${ticker.price !== null ? ticker.price.toFixed(2) : 'N/A'}

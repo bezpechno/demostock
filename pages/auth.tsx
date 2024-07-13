@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { auth, GoogleAuthProvider, signInWithPopup, signOut } from "../lib/firebaseConfig";
+import { auth, GoogleAuthProvider, signInWithPopup, signOut } from "@lib/firebaseConfig";
 import { useRouter } from "next/router";
 import { onAuthStateChanged } from "firebase/auth";
 import React from 'react';

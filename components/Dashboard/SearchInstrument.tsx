@@ -1,119 +1,64 @@
-// components/Charts/InstrumentChart.tsx
+// components/SearchInstrument.tsx
 
-import React from 'react';
-import {
-  ChartCanvas,
-  Chart,
-  series,
-  axes,
-  scale,
-  tooltip,
-  indicator,
-  helper
-} from 'react-financial-charts';
-import { timeParse } from 'd3-time-format';
-import { last } from 'react-financial-charts/lib/utils';
+import React, { useState } from 'react';
+import axios from 'axios';
 
-interface InstrumentChartProps {
-  data: { date: string; open: number; high: number; low: number; close: number; volume: number }[];
+interface SearchInstrumentProps {
+  onSelect: (symbol: string) => void;
 }
 
-const InstrumentChart: React.FC<InstrumentChartProps> = ({ data }) => {
-  const parseDate = timeParse('%Y-%m-%d');
-  const chartData = data.map((d) => ({
-    date: parseDate(d.date),
-    open: d.open,
-    high: d.high,
-    low: d.low,
-    close: d.close,
-    volume: d.volume,
-  }));
+const SearchInstrument: React.FC<SearchInstrumentProps> = ({ onSelect }) => {
+  const [query, setQuery] = useState('');
+  const [results, setResults] = useState<{ symbol: string; name: string }[]>([]);
+  const [error, setError] = useState<string | null>(null);
 
-  const xAccessor = (d) => d.date;
-  const xExtents = [xAccessor(last(chartData)), xAccessor(chartData[chartData.length - 100])];
+  const search = async () => {
+    setError(null);
+    try {
+      const response = await axios.get('/api/search', {
+        params: { query },
+      });
+      setResults(response.data);
+    } catch (error) {
+      setError('Error fetching search results');
+      console.error('Error fetching search results:', error);
+    }
+  };
 
-  const { CandlestickSeries } = series;
-  const { XAxis, YAxis } = axes;
-  const { CrossHairCursor, MouseCoordinateX, MouseCoordinateY } = coordinates;
-  const { OHLCTooltip, MovingAverageTooltip } = tooltip;
-  const { ema, sma } = indicator;
-  const { fitWidth } = helper;
-
-  const ema26 = ema()
-    .options({ windowSize: 26 })
-    .merge((d, c) => {
-      d.ema26 = c;
-    })
-    .accessor((d) => d.ema26);
-
-  const ema12 = ema()
-    .options({ windowSize: 12 })
-    .merge((d, c) => {
-      d.ema12 = c;
-    })
-    .accessor((d) => d.ema12);
-
-  const smaVolume50 = sma()
-    .options({ windowSize: 50, sourcePath: 'volume' })
-    .merge((d, c) => {
-      d.smaVolume50 = c;
-    })
-    .accessor((d) => d.smaVolume50)
-    .stroke('#4682B4')
-    .fill((d) => (d.close > d.open ? '#6BA583' : '#FF0000'));
+  const handleSelect = (symbol: string) => {
+    setQuery('');
+    setResults([]);
+    onSelect(symbol);
+  };
 
   return (
-    <ChartCanvas
-      height={400}
-      ratio={3}
-      width={800}
-      margin={{ left: 50, right: 50, top: 10, bottom: 30 }}
-      type="svg"
-      seriesName="MSFT"
-      data={chartData}
-      xAccessor={xAccessor}
-      xScale={scale.scaleTime()}
-      xExtents={xExtents}
-    >
-      <Chart id={1} yExtents={(d) => [d.high, d.low]}>
-        <XAxis axisAt="bottom" orient="bottom" />
-        <YAxis axisAt="left" orient="left" ticks={5} />
-        <MouseCoordinateY at="left" orient="left" displayFormat={d3.format('.2f')} />
-        <MouseCoordinateX at="bottom" orient="bottom" displayFormat={timeFormat('%Y-%m-%d')} />
-        <CandlestickSeries />
-        <OHLCTooltip origin={[-40, 0]} />
-        <MovingAverageTooltip
-          onClick={(e) => console.log(e)}
-          origin={[-38, 15]}
-          options={[
-            {
-              yAccessor: ema26.accessor(),
-              type: 'EMA',
-              stroke: ema26.stroke(),
-              windowSize: ema26.options().windowSize,
-            },
-            {
-              yAccessor: ema12.accessor(),
-              type: 'EMA',
-              stroke: ema12.stroke(),
-              windowSize: ema12.options().windowSize,
-            },
-            {
-              yAccessor: smaVolume50.accessor(),
-              type: 'SMA',
-              stroke: smaVolume50.stroke(),
-              windowSize: smaVolume50.options().windowSize,
-            },
-          ]}
-        />
-      </Chart>
-      <Chart id={2} yExtents={(d) => d.volume} height={100} origin={(w, h) => [0, h - 100]}>
-        <YAxis axisAt="left" orient="left" ticks={5} tickFormat={d3.format('.2s')} />
-        <MouseCoordinateY at="left" orient="left" displayFormat={d3.format('.4s')} />
-      </Chart>
-      <CrossHairCursor />
-    </ChartCanvas>
+    <div>
+      <input
+        type="text"
+        value={query}
+        onChange={(e) => setQuery(e.target.value)}
+        placeholder="Search for an instrument"
+        className="px-4 py-2 border rounded"
+      />
+      <button onClick={search} className="ml-2 px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600">
+        Search
+      </button>
+      {error && <p className="text-red-500">{error}</p>}
+      {results.length > 0 && (
+        <ul className="mt-2 border rounded bg-white">
+          {results.map((result) => (
+            <li
+              key={result.symbol}
+              onClick={() => handleSelect(result.symbol)}
+              className="px-4 py-2 cursor-pointer hover:bg-gray-200"
+            >
+              {result.name} ({result.symbol})
+            </li>
+          ))}
+        </ul>
+      )}
+    </div>
   );
 };
 
-export default fitWidth(InstrumentChart);
+export default SearchInstrument;

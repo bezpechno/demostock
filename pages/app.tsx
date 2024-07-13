@@ -1,5 +1,3 @@
-// pages/app.tsx
-
 import React, { useState } from 'react';
 import { v4 as uuidv4 } from 'uuid';
 import ProtectedRoute from '../components/ProtectedRoute';
@@ -15,7 +13,9 @@ import axios from 'axios';
 const DashboardContent: React.FC = () => {
   const [viewingPortfolio, setViewingPortfolio] = useState<any>(null);
   const { portfolios, addPortfolio } = usePortfolio();
-  const [chartData, setChartData] = useState<{ date: string; price: number }[]>([]);
+  const [chartData, setChartData] = useState<
+    { date: string; open: number; high: number; low: number; close: number; volume: number }[]
+  >([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
