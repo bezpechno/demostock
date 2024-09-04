@@ -1,15 +1,15 @@
-// components/SearchInstrument.tsx
-
+// components/Dashboard/SearchInstrument.tsx
 import React, { useState } from 'react';
 import axios from 'axios';
 
 interface SearchInstrumentProps {
-  onSelect: (symbol: string) => void;
+  onSelect: (symbol: string, price: number) => void;
 }
+
 
 const SearchInstrument: React.FC<SearchInstrumentProps> = ({ onSelect }) => {
   const [query, setQuery] = useState('');
-  const [results, setResults] = useState<{ symbol: string; name: string }[]>([]);
+  const [results, setResults] = useState<{ symbol: string; name: string; price: number }[]>([]);
   const [error, setError] = useState<string | null>(null);
 
   const search = async () => {
@@ -19,16 +19,18 @@ const SearchInstrument: React.FC<SearchInstrumentProps> = ({ onSelect }) => {
         params: { query },
       });
       setResults(response.data);
+      console.log('Search results:', response.data);
     } catch (error) {
       setError('Error fetching search results');
       console.error('Error fetching search results:', error);
     }
   };
 
-  const handleSelect = (symbol: string) => {
+  const handleSelect = (symbol: string, price: number) => {
+    console.log('Instrument selected:', symbol);
     setQuery('');
     setResults([]);
-    onSelect(symbol);
+    onSelect(symbol, price);
   };
 
   return (
@@ -49,7 +51,7 @@ const SearchInstrument: React.FC<SearchInstrumentProps> = ({ onSelect }) => {
           {results.map((result) => (
             <li
               key={result.symbol}
-              onClick={() => handleSelect(result.symbol)}
+              onClick={() => handleSelect(result.symbol, result.price)}
               className="px-4 py-2 cursor-pointer hover:bg-gray-200"
             >
               {result.name} ({result.symbol})

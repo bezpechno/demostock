@@ -1,30 +1,53 @@
 // components/Dashboard/PortfolioDetails.tsx
-import React from 'react';
-
-interface Portfolio {
-  id: string;
-  name: string;
-  value: number;
-  gain: number;
-  type: string;
-  data: { date: string; equity: number }[];
-}
+import React, { useEffect, useState } from 'react';
+import { Portfolio, Asset } from '../../types/types';
 
 interface PortfolioDetailsProps {
   portfolio: Portfolio;
+  onAddInvestment: () => void;
+  fetchPrices: (symbols: string[]) => Promise<Record<string, number>>;
 }
 
-const PortfolioDetails: React.FC<PortfolioDetailsProps> = ({ portfolio }) => {
+const PortfolioDetails: React.FC<PortfolioDetailsProps> = ({ portfolio, onAddInvestment, fetchPrices }) => {
+  const [totalValue, setTotalValue] = useState(0);
+  const [assets, setAssets] = useState<Asset[]>(portfolio.assets);
+
+  useEffect(() => {
+    const updateAssetPrices = async () => {
+      const symbols = portfolio.assets.map(asset => asset.symbol);
+      const prices = await fetchPrices(symbols);
+      
+      const updatedAssets = portfolio.assets.map(asset => ({
+        ...asset,
+        currentPrice: prices[asset.symbol] || asset.currentPrice
+      }));
+
+      const newTotalValue = updatedAssets.reduce((total, asset) => total + asset.amount * asset.currentPrice, 0);
+
+      setAssets(updatedAssets);
+      setTotalValue(newTotalValue);
+    };
+
+    updateAssetPrices();
+  }, [portfolio.assets, fetchPrices]);
+
+  if (!portfolio) {
+    return <div>Loading...</div>;
+  }
+
   return (
-    <div className="mt-4">
-      <h2 className="text-xl font-bold">{portfolio.name} Details</h2>
-      <p>Value: ${portfolio.value.toFixed(2)}</p>
-      <p>Gain: ${portfolio.gain.toFixed(2)}</p>
-      <p>Type: {portfolio.type}</p>
-      <div>
-        <h3 className="text-lg font-bold mt-4">Equity Data</h3>
-        {/* Вы можете добавить график или другие данные по вашему желанию */}
-      </div>
+    <div>
+      <h2>{portfolio.name}</h2>
+      <p>Total Value: ${totalValue.toFixed(2)}</p>
+      <h3>Assets:</h3>
+      <ul>
+        {assets.map((asset, index) => (
+          <li key={index}>
+            {asset.amount} {asset.symbol} (${asset.currentPrice.toFixed(2)})
+          </li>
+        ))}
+      </ul>
+      <button onClick={onAddInvestment}>Add Investment</button>
     </div>
   );
 };

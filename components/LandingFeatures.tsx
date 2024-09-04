@@ -1,3 +1,4 @@
+// components/LandingFeatures.tsx
 import { ChartBarIcon, AcademicCapIcon, ShieldCheckIcon } from '@heroicons/react/outline';
 import React from 'react';
 

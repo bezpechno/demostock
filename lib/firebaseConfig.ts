@@ -1,5 +1,8 @@
+// lib/firebaseConfig.ts
 import { initializeApp } from 'firebase/app';
 import { getAuth, GoogleAuthProvider, signInWithPopup, signOut } from 'firebase/auth';
+import { getFirestore, doc, getDoc, setDoc } from 'firebase/firestore';
+import { Portfolio } from '../types/types';
 
 const firebaseConfig = {
   apiKey: process.env.NEXT_PUBLIC_FIREBASE_API_KEY,
@@ -12,5 +15,22 @@ const firebaseConfig = {
 
 const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
+const db = getFirestore(app);
+
+export const getPortfolio = async (id: string): Promise<Portfolio | null> => {
+  const docRef = doc(db, 'portfolios', id);
+  const docSnap = await getDoc(docRef);
+  return docSnap.exists() ? (docSnap.data() as Portfolio) : null;
+};
+
+export const updatePortfolio = async (portfolio: Portfolio): Promise<void> => {
+  const docRef = doc(db, 'portfolios', portfolio.id);
+  await setDoc(docRef, portfolio);
+};
+
+export const createPortfolio = async (portfolio: Portfolio): Promise<void> => {
+  const docRef = doc(db, 'portfolios', portfolio.id);
+  await setDoc(docRef, portfolio);
+};
 
 export { auth, GoogleAuthProvider, signInWithPopup, signOut };

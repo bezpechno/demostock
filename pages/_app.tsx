@@ -5,6 +5,9 @@ import { ThemeProvider, createTheme, CssBaseline } from '@mui/material';
 import { PortfolioProvider } from '../lib/portfolioContext';
 import { AuthProvider } from '../lib/authContext';
 import '../styles/globals.css';
+import Modal from 'react-modal';
+
+Modal.setAppElement('#__next'); // Устанавливает корневой элемент для модального окна
 
 const theme = createTheme({
   // Настройка темы

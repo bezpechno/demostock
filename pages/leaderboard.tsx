@@ -1,3 +1,4 @@
+// pages/leaderboard.tsx
 import React, { useState } from 'react';
 import ProtectedRoute from '../components/ProtectedRoute';
 import LeaderboardTable from '../components/Leaderboard/LeaderboardTable';

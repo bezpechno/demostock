@@ -1,3 +1,4 @@
+// components/AuthModal.tsx
 import React, { useState } from 'react';
 import { Dialog, DialogTitle, DialogContent, TextField, Button, Typography } from '@mui/material';
 import { signInWithEmailAndPassword, createUserWithEmailAndPassword } from 'firebase/auth';

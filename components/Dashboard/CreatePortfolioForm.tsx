@@ -1,51 +1,83 @@
-// components/Dashboard/CreatePortfolioForm.tsx
-import React, { useState } from 'react';
+import React, { useState, useCallback } from 'react';
+import AddAssetsModal from './AddAssetsModal';
+import { useAuth } from '../../lib/authContext';
+import { Asset } from '../../types/types';
+import { usePortfolio } from '../../lib/portfolioContext';
 
 interface CreatePortfolioFormProps {
-  createPortfolio: (name: string, type: string) => void;
+  createPortfolio: (name: string, assets: Asset[], creator: string) => Promise<void>;
 }
 
-const CreatePortfolioForm: React.FC<CreatePortfolioFormProps> = ({ createPortfolio }) => {
-  const [name, setName] = useState('');
-  const [type, setType] = useState('private');
-
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (name) {
-      createPortfolio(name, type);
-      setName('');
+const aggregateAssets = (assets: { symbol: string; amount: number; price: number }[]): Asset[] => {
+  const aggregatedMap = new Map<string, Asset>();
+  
+  assets.forEach(asset => {
+    const existingAsset = aggregatedMap.get(asset.symbol);
+    if (existingAsset) {
+      existingAsset.amount += asset.amount;
+      existingAsset.initialPrice = (existingAsset.initialPrice * existingAsset.amount + asset.price * asset.amount) / (existingAsset.amount + asset.amount);
+      existingAsset.currentPrice = asset.price;
+    } else {
+      aggregatedMap.set(asset.symbol, {
+        symbol: asset.symbol,
+        amount: asset.amount,
+        initialPrice: asset.price,
+        currentPrice: asset.price,
+        dateAdded: new Date()
+      });
     }
-  };
+  });
+
+  return Array.from(aggregatedMap.values());
+};
+
+const CreatePortfolioForm: React.FC<CreatePortfolioFormProps> = ({ createPortfolio }) => {
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const { user, signIn } = useAuth();
+  const { portfolios } = usePortfolio();
+
+  const handleCreatePortfolio = useCallback(async (name: string, assets: { symbol: string; amount: number; price: number }[]) => {
+    if (!user) {
+      console.error('User is not authenticated');
+      try {
+        await signIn();
+      } catch (error) {
+        console.error('Failed to sign in:', error);
+        return;
+      }
+    }
+    
+    if (user) {
+      try {
+        // Проверка на существование портфолио с таким именем
+        if (portfolios.some(p => p.name === name)) {
+          alert(`Portfolio with name "${name}" already exists`);
+          return;
+        }
+
+        const aggregatedAssets = aggregateAssets(assets);
+        await createPortfolio(name, aggregatedAssets, user.id);
+        setIsModalOpen(false); // Закрываем модальное окно после успешного создания
+      } catch (error) {
+        console.error('Error creating portfolio:', error);
+        alert('Failed to create portfolio. Please try again.');
+      }
+    } else {
+      console.error('Failed to get creator information');
+    }
+  }, [user, signIn, createPortfolio, portfolios]);
 
   return (
-    <form onSubmit={handleSubmit} className="bg-white shadow-md rounded-lg p-4">
-      <div>
-        <label className="block text-sm font-medium text-gray-700">Portfolio Name</label>
-        <input
-          type="text"
-          value={name}
-          onChange={(e) => setName(e.target.value)}
-          className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
-        />
-      </div>
-      <div className="mt-4">
-        <label className="block text-sm font-medium text-gray-700">Type</label>
-        <select
-          value={type}
-          onChange={(e) => setType(e.target.value)}
-          className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
-        >
-          <option value="private">Private</option>
-          <option value="public">Public</option>
-        </select>
-      </div>
-      <button
-        type="submit"
-        className="mt-4 px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600"
-      >
+    <div>
+      <button onClick={() => setIsModalOpen(true)}>
         Create Portfolio
       </button>
-    </form>
+      <AddAssetsModal
+        isOpen={isModalOpen}
+        onClose={() => setIsModalOpen(false)}
+        onCreatePortfolio={handleCreatePortfolio}
+      />
+    </div>
   );
 };
 

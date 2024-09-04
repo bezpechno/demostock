@@ -1,3 +1,4 @@
+// pages/auth.tsx
 import { useEffect, useState } from "react";
 import { auth, GoogleAuthProvider, signInWithPopup, signOut } from "@lib/firebaseConfig";
 import { useRouter } from "next/router";

@@ -1,31 +1,59 @@
-// lib/authContext.tsx
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
-import { auth } from './firebaseConfig';
-import { onAuthStateChanged, User } from 'firebase/auth';
+import { User } from '../types/types';
+import { auth, signInWithGoogle, getCurrentUser, createOrGetUser } from './firebase';
 
 interface AuthContextType {
   user: User | null;
   loading: boolean;
+  signIn: () => Promise<void>;
+  signOut: () => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
   const [user, setUser] = useState<User | null>(null);
-  const [loading, setLoading] = useState<boolean>(true);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, (user) => {
-      console.log('User state changed:', user);
-      setUser(user);
+    const unsubscribe = auth.onAuthStateChanged(async (firebaseUser) => {
+      if (firebaseUser) {
+        try {
+          const userData = await createOrGetUser(firebaseUser);
+          setUser(userData);
+        } catch (error) {
+          console.error("Error getting user data:", error);
+          setUser(null);
+        }
+      } else {
+        setUser(null);
+      }
       setLoading(false);
     });
-
+  
     return () => unsubscribe();
   }, []);
 
+  const signIn = async () => {
+    try {
+      const userData = await signInWithGoogle();
+      setUser(userData);
+    } catch (error) {
+      console.error("Error signing in:", error);
+    }
+  };
+
+  const signOut = async () => {
+    try {
+      await auth.signOut();
+      setUser(null);
+    } catch (error) {
+      console.error("Error signing out:", error);
+    }
+  };
+
   return (
-    <AuthContext.Provider value={{ user, loading }}>
+    <AuthContext.Provider value={{ user, loading, signIn, signOut }}>
       {children}
     </AuthContext.Provider>
   );

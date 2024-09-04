@@ -1,20 +1,14 @@
 import React, { createContext, useContext, useState } from 'react';
+import { Portfolio } from '../types/types';
 
-interface Portfolio {
-  id: string;
-  name: string;
-  value: number;
-  gain: number;
-  type: string;
-  data: { date: string; equity: number }[];
-}
-
-interface PortfolioContextType {
+export interface PortfolioContextType {
   portfolios: Portfolio[];
   addPortfolio: (portfolio: Portfolio) => void;
+  updatePortfolio: (updatedPortfolio: Portfolio) => void;
+  setPortfolios: React.Dispatch<React.SetStateAction<Portfolio[]>>;
 }
 
-const PortfolioContext = createContext<PortfolioContextType | undefined>(undefined);
+export const PortfolioContext = createContext<PortfolioContextType | undefined>(undefined);
 
 export const PortfolioProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [portfolios, setPortfolios] = useState<Portfolio[]>([]);
@@ -23,8 +17,16 @@ export const PortfolioProvider: React.FC<{ children: React.ReactNode }> = ({ chi
     setPortfolios((prevPortfolios) => [...prevPortfolios, portfolio]);
   };
 
+  const updatePortfolio = (updatedPortfolio: Portfolio) => {
+    setPortfolios((prevPortfolios) =>
+      prevPortfolios.map((portfolio) =>
+        portfolio.id === updatedPortfolio.id ? updatedPortfolio : portfolio
+      )
+    );
+  };
+
   return (
-    <PortfolioContext.Provider value={{ portfolios, addPortfolio }}>
+    <PortfolioContext.Provider value={{ portfolios, addPortfolio, updatePortfolio, setPortfolios }}>
       {children}
     </PortfolioContext.Provider>
   );

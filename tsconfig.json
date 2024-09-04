@@ -6,7 +6,8 @@
       "@components/Charts/*": ["components/Charts/*"],
       "@components/Dashboard/*": ["components/Dashboard/*"],
       "@components/Leaderboard/*": ["components/Leaderboard/*"],
-      "@lib/*": ["lib/*"]
+      "@lib/*": ["lib/*"],
+      "@types/*": ["types/*"]
     },
     "target": "es5",
     "lib": ["dom", "dom.iterable", "esnext"],

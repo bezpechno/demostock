@@ -1,20 +1,13 @@
 // pages/api/portfolio.ts
-
 import type { NextApiRequest, NextApiResponse } from 'next';
-import { portfoliosCache } from '@lib/cache'; // Исправьте путь импорта
+import { portfoliosCache } from '@lib/cache';
 
 export default (req: NextApiRequest, res: NextApiResponse) => {
-  const { id } = req.query;
-
-  if (!id || Array.isArray(id)) {
-    return res.status(400).json({ error: 'Portfolio ID is required' });
+  if (req.method === 'GET') {
+    const portfolios = Array.from(portfoliosCache.values());
+    res.status(200).json(portfolios);
+  } else {
+    res.setHeader('Allow', ['GET']);
+    res.status(405).end(`Method ${req.method} Not Allowed`);
   }
-
-  const portfolio = portfoliosCache.get(id as string);
-
-  if (!portfolio) {
-    return res.status(404).json({ error: 'Portfolio not found' });
-  }
-
-  res.status(200).json(portfolio);
 };

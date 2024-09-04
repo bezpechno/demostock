@@ -1,3 +1,4 @@
+// components/ProtectedRoute.tsx
 import React, { useEffect, ReactNode } from 'react';
 import { useRouter } from 'next/router';
 import { useAuth } from '../lib/authContext';
